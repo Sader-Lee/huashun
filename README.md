@@ -361,14 +361,14 @@ client:
 
 ### 容器运行权限收紧
 
-| 措施                                   | 作用                                       |
-| -------------------------------------- | ------------------------------------------ |
-| `user: "65532:65532"`                  | 非 root 运行（distroless `nonroot`）       |
-| `read_only: true`                      | 根文件系统只读，杜绝运行期写入与落盘持久化 |
-| `tmpfs: /tmp`                          | 只读根下仍提供一个内存态可写目录           |
-| `cap_drop: [ALL]`                      | 丢弃全部 Linux capabilities                |
-| `security_opt: no-new-privileges:true` | 禁止 setuid 等提权路径                     |
-| `init: true`                           | 由 tini 回收僵尸进程                       |
+| 措施                                         | 作用                                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| `user: "65532:65532"`                        | 非 root 运行（distroless `nonroot`）                        |
+| `read_only: true`                            | 根文件系统只读，杜绝运行期写入与落盘持久化                  |
+| `tmpfs: /tmp`                                | 只读根下仍提供一个内存态可写目录                            |
+| `cap_drop: [ALL]`                            | 丢弃全部 Linux capabilities                                 |
+| `security_opt: no-new-privileges:true`       | 禁止 setuid 等提权路径                                      |
+| `init: true`                                 | 由 tini 回收僵尸进程                                        |
 | `deploy.resources.limits.{cpus,memory,pids}` | CPU / 内存 / 进程数上限，防止单容器拖垮主机、抑制 fork 炸弹 |
 
 ### 识别规则与程序代码解耦
