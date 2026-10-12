@@ -1,0 +1,77 @@
+# FTP 指纹规则
+#
+# FTP 服务端在连接建立后立即发送 220 欢迎语，典型形态：
+#   "220 ProFTPD 1.3.7 Server (Debian)"
+#   "220 (vsFTPd 3.0.3)"
+#   "220-FileZilla Server 1.6.0"
+
+- id: ftp-proftpd
+  protocol: FTP
+  product: ProFTPD
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)ProFTPD"
+  version:
+    - '(?i)ProFTPD\s+v?([0-9][0-9A-Za-z.\-]*)'
+  os_hint:
+    - regex: '(?i)\((Ubuntu|Debian|CentOS|Fedora|FreeBSD)\)'
+      value: $1
+
+- id: ftp-vsftpd
+  protocol: FTP
+  product: vsftpd
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)vsftpd"
+  version:
+    - '(?i)vsftpd\s+v?([0-9][0-9A-Za-z.\-]*)'
+
+- id: ftp-pureftpd
+  protocol: FTP
+  product: Pure-FTPd
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)Pure-FTPd"
+  version:
+    - '(?i)Pure-FTPd\s+v?([0-9][0-9A-Za-z.\-]*)'
+
+- id: ftp-filezilla
+  protocol: FTP
+  product: FileZilla Server
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)FileZilla Server"
+  version:
+    - '(?i)FileZilla Server\s+v?([0-9][0-9A-Za-z.\-]*)'
+
+- id: ftp-wu-ftpd
+  protocol: FTP
+  product: wu-ftpd
+  priority: 100
+  confidence: 0.85
+  match:
+    any:
+      - '(?i)wu-2\.'
+  version:
+    - '(?i)wu-([0-9][0-9A-Za-z.\-]*)'
+
+- id: ftp-generic
+  protocol: FTP
+  product: ""
+  priority: 10
+  confidence: 0.75
+  match:
+    any:
+      - '(?im)^220[ -][^\r\n]{0,100}(FTP|ftpd)'
+      - "(?im)^331[ -].*[Pp]assword"
+      - "(?im)^230[ -].*logged in"
+  version:
+    - '(?im)^220[ -][^\r\n]*?\bv?([0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.\-]*)'

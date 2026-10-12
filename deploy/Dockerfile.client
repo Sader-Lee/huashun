@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.7
+#
+# client 镜像：与 server 同样的多阶段 + distroless 策略。
+# 客户端是一次性程序（跑完即退出），因此不需要 HEALTHCHECK。
+
+# ---------- 构建阶段 ----------
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /src
+
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOFLAGS=-mod=readonly
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath -ldflags="-s -w" -o /out/client ./cmd/client
+
+# ---------- 运行阶段 ----------
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/client /client
+
+# 内置一份自测数据，保证镜像单独 run 也能跑通；
+# 运行时通过挂载 /data 覆盖即可换成真实扫描结果。
+COPY testdata/input.json /data/input.json
+
+# 默认通过 compose 服务名访问 server（内部网络解析），而不是 localhost。
+ENV SERVER_URL=http://server:8080 \
+    INPUT_FILE=/data/input.json
+
+USER nonroot:nonroot
+
+ENTRYPOINT ["/client"]

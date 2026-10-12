@@ -1,0 +1,13 @@
+# 本地调试用的 Compose 叠加文件（默认部署不使用）
+#
+# 用法：
+#   docker compose -f docker-compose.yml -f deploy/compose.debug.yml up -d --build
+#   curl.exe -s http://127.0.0.1:8080/health
+#
+# 说明：默认部署刻意不给 server 做端口映射（收敛访问面）。
+# 只有在需要从宿主机直接 curl 调试时才叠加本文件。
+# 绑定到 127.0.0.1 而非 0.0.0.0，避免调试端口暴露到局域网。
+services:
+  server:
+    ports:
+      - "127.0.0.1:8080:8080"

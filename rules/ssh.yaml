@@ -1,0 +1,78 @@
+# SSH 指纹规则
+#
+# 字段说明：
+#   id         规则唯一标识，便于排障与日志定位
+#   protocol   归一化后的协议名（认不出时统一为 unknown）
+#   product    软件/产品名
+#   priority   优先级。同一 banner 命中多条规则时，优先级高者胜出
+#              （优先级用于表达"特征具体程度"，越具体越高）
+#   confidence 基础置信度 0~1，由规则自身描述，不写死在代码里
+#   match.any  任一正则命中即视为匹配
+#   match.all  必须全部命中
+#   match.none 任一命中则否决本条规则
+#   version    版本提取正则，取第一个捕获组（无捕获组则取整体匹配）
+#   os_hint    操作系统线索；给出 value 则取字面值，否则取第一个捕获组
+#
+# 注：YAML 单引号字符串中反斜杠为字面量，正则无需二次转义。
+
+- id: ssh-openssh
+  protocol: SSH
+  product: OpenSSH
+  priority: 100
+  confidence: 0.95
+  match:
+    any:
+      - "(?im)^SSH-[0-9.]+-OpenSSH[_/]"
+      - '(?im)\bOpenSSH[_-][0-9]'
+  version:
+    - '(?i)OpenSSH[_-]([0-9][0-9A-Za-z.\-]*)'
+  os_hint:
+    - regex: '(?i)\bUbuntu\b'
+      value: Ubuntu
+    - regex: '(?i)\bDebian\b'
+      value: Debian
+    - regex: '(?i)\bCentOS\b'
+      value: CentOS
+    - regex: '(?i)\bRed ?Hat\b'
+      value: Red Hat
+    - regex: '(?i)\bAmazon Linux\b'
+      value: Amazon Linux
+    - regex: '(?i)\bFreeBSD\b'
+      value: FreeBSD
+    - regex: '(?i)\bSUSE\b'
+      value: SUSE
+    - regex: '(?i)\bAlpine\b'
+      value: Alpine
+
+- id: ssh-dropbear
+  protocol: SSH
+  product: Dropbear
+  priority: 95
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)dropbear"
+  version:
+    - "(?i)dropbear[_ ]?(?:sshd[_ ]?)?v?([0-9][0-9.]*)"
+
+- id: ssh-libssh
+  protocol: SSH
+  product: libssh
+  priority: 95
+  confidence: 0.85
+  match:
+    any:
+      - "(?i)^SSH-[0-9.]+-libssh"
+  version:
+    - "(?i)libssh[_-]([0-9][0-9.]*)"
+
+- id: ssh-generic
+  protocol: SSH
+  product: ""
+  priority: 10
+  confidence: 0.7
+  match:
+    any:
+      - '(?im)^SSH-[0-9]+\.[0-9]+-'
+  version:
+    - '(?im)^SSH-[0-9.]+-[A-Za-z][A-Za-z0-9]*[-_ ]?([0-9][0-9A-Za-z.\-]*)'

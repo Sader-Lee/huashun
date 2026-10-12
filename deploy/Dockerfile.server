@@ -1,0 +1,67 @@
+# syntax=docker/dockerfile:1.7
+#
+# server 镜像：多阶段构建，产物是纯静态二进制 + distroless 运行镜像。
+#
+# 设计说明（对应"编译打包理解程度"）：
+#   1. 两阶段构建。构建阶段有 Go 工具链，运行阶段只有二进制本体，
+#      镜像里没有编译器等无关内容。
+#   2. CGO_ENABLED=0 产出静态链接二进制，因此运行镜像可以用 distroless/static
+#      （不含 glibc），也可以用 scratch。
+#   3. -trimpath 去掉宿主机构建路径，-s -w 去掉符号表与调试信息，减小体积。
+#   4. 先只 COPY go.mod/go.sum 再 go mod download，让依赖层被缓存：
+#      改业务代码不会触发重新下载依赖。
+#   5. 用 BuildKit 的 cache mount 缓存 module 与 build cache，重复构建显著加速。
+#   6. 版本信息通过 -ldflags 注入，/health 里能查到，便于确认线上跑的到底是哪个提交。
+
+# ---------- 构建阶段 ----------
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /src
+
+# 静态编译：不依赖目标机的 libc，运行镜像才能做到极简
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOFLAGS=-mod=readonly
+
+# 依赖层：单独一层，最大化利用缓存
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# 源码层
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY rules/ ./rules/
+
+ARG VERSION=dev
+ARG COMMIT=none
+ARG BUILD_DATE=unknown
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath \
+      -ldflags="-s -w \
+        -X github.com/Sader-Lee/huashun/internal/buildinfo.Version=${VERSION} \
+        -X github.com/Sader-Lee/huashun/internal/buildinfo.Commit=${COMMIT} \
+        -X github.com/Sader-Lee/huashun/internal/buildinfo.Date=${BUILD_DATE}" \
+      -o /out/server ./cmd/server
+
+# ---------- 运行阶段 ----------
+# distroless/static：无 shell、无包管理器、无多余二进制，攻击面最小。
+# :nonroot 后缀表示默认以 UID 65532 的非 root 用户运行。
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/server /server
+
+# 指纹规则已通过 go:embed 打进二进制，镜像本身是自包含的；
+# 若需要在不重建镜像的前提下调整规则，运行期挂载目录并设置 RULES_DIR 即可。
+USER nonroot:nonroot
+
+EXPOSE 8080
+
+# distroless 里没有 shell/curl，所以把探针做进二进制：`/server healthcheck`。
+# 注意这里是 exec 形式，不会经过 entrypoint，直接以参数 "healthcheck" 执行。
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
+    CMD ["/server", "healthcheck"]
+
+ENTRYPOINT ["/server"]

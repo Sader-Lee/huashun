@@ -1,0 +1,40 @@
+# Redis 指纹规则
+#
+# Redis 使用 RESP 协议，未认证时典型横幅为 "-NOAUTH Authentication required."，
+# 也可能只拿到 "+PONG"（客户端发过 PING）或 "-ERR unknown command"。
+# 这些都属于"弱特征"：能确定协议，但拿不到版本，因此置信度给 0.7。
+# 如果扫描时执行过 INFO 命令，banner 里会带 redis_version，则置信度提升到 0.92。
+
+- id: redis-with-version
+  protocol: Redis
+  product: Redis
+  priority: 110
+  confidence: 0.92
+  match:
+    any:
+      - "(?i)redis_version"
+      - '(?i)\bredis_mode\b'
+  version:
+    - '(?i)redis_version\s*:\s*([0-9][0-9.]*)'
+  os_hint:
+    # 形如 "os:Linux 5.15.0 x86_64"，只取操作系统名，不带内核版本
+    - regex: '(?im)^os\s*:\s*([A-Za-z][A-Za-z0-9_]*)'
+      value: $1
+
+- id: redis-generic
+  protocol: Redis
+  product: Redis
+  priority: 100
+  confidence: 0.7
+  match:
+    any:
+      - '(?m)^-(NOAUTH|ERR|WRONGTYPE|MOVED|ASK|NOSCRIPT|BUSY|DENIED|LOADING|MASTERDOWN|READONLY)\b'
+      - '(?m)^\+PONG'
+      - '(?m)^\+OK'
+      - '(?m)^\*[0-9]+\r?$'
+      - '(?m)^\$[0-9]+\r?$'
+      - "(?i)redis_version"
+      - "(?i)-READONLY You can.t write against a read only replica"
+  none:
+    # 避免把其它返回 RESP 风格错误信息的服务误判成 Redis
+    - '(?i)\bHTTP/1\.[01]\b'

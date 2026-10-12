@@ -1,0 +1,8 @@
+# 构建上下文瘦身：只保留编译真正需要的文件
+.git
+.gitignore
+.editorconfig
+bin/
+*.exe
+*.log
+README.md

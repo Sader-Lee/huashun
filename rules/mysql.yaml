@@ -1,0 +1,64 @@
+# MySQL / MariaDB 指纹规则
+#
+# MySQL 的服务端握手包（Greeting）是二进制数据，转成文本后典型形态为：
+#   <协议版本 1 字节><服务端版本字符串 \0><连接 ID 4 字节>...
+# 例如： "\x0a8.0.32\x00\x1a\x00\x00\x00<caching_sha2_password>..."
+# 因此版本号常出现在 banner 起始位置，用 ^.{0,N}? 前缀容忍少量非打印字节。
+
+- id: mysql-mariadb
+  protocol: MySQL
+  product: MariaDB
+  priority: 110
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)mariadb"
+      - '(?s)5\.5\.5-[0-9]+\.[0-9]+\.[0-9]+-MariaDB'
+  version:
+    - '(?i)5\.5\.5-([0-9]+\.[0-9]+\.[0-9]+)-MariaDB'
+    - '(?i)MariaDB[^\r\n0-9]{0,16}([0-9]+\.[0-9]+\.[0-9]+)'
+    - '(?s)^.{0,16}?([0-9]+\.[0-9]+\.[0-9]+)-?MariaDB'
+  os_hint:
+    - regex: "(?i)ubuntu"
+      value: Ubuntu
+    - regex: "(?i)debian"
+      value: Debian
+
+- id: mysql-server
+  protocol: MySQL
+  product: MySQL
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - "(?i)mysql_native_password"
+      - "(?i)caching_sha2_password"
+      - "(?i)sha256_password"
+      - "(?i)MySQL Community Server"
+      - '(?i)MySQL[^\r\n]{0,32}[0-9]+\.[0-9]+\.[0-9]+'
+      - '(?s)^.{0,16}?[0-9]+\.[0-9]+\.[0-9]+.{0,16}?(caching_sha2_password|mysql_native_password|sha256_password)'
+  version:
+    - '(?s)^.{0,16}?([0-9]+\.[0-9]+\.[0-9]+)'
+    - '(?i)MySQL[^\r\n0-9]{0,16}([0-9]+\.[0-9]+\.[0-9]+)'
+    - '(?s)([0-9]+\.[0-9]+\.[0-9]+).{0,16}?(caching_sha2_password|mysql_native_password)'
+  os_hint:
+    - regex: "(?i)ubuntu"
+      value: Ubuntu
+    - regex: "(?i)debian"
+      value: Debian
+    - regex: "(?i)centos"
+      value: CentOS
+    - regex: '(?i)\brhel\b'
+      value: Red Hat
+    - regex: '(?i)\bel[0-9]+\b'
+      value: RHEL
+
+- id: mysql-generic
+  protocol: MySQL
+  product: MySQL
+  priority: 10
+  confidence: 0.55
+  match:
+    any:
+      - '(?s)^.{0,4}[0-9]+\.[0-9]+\.[0-9]+.{0,4}(caching_sha2|mysql_native|sha256)'
+      - '(?i)\bmysql\b'

@@ -1,0 +1,13 @@
+# 统一换行符：仓库内一律 LF，避免 Windows 下 CRLF 污染 Dockerfile / YAML / shell 脚本
+* text=auto eol=lf
+
+# Windows 批处理必须 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.exe binary

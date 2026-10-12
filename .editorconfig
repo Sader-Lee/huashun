@@ -1,0 +1,16 @@
+root = true
+
+# 统一 UTF-8：避免 Windows 下文件被写成 UTF-16 导致 git 当成二进制、diff 不可读
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

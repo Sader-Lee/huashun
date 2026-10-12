@@ -1,0 +1,156 @@
+# HTTP / HTTPS 指纹规则
+#
+# HTTP 的 banner 通常是原始响应报文（含状态行与响应头），
+# 因此这里全部基于响应行 / Server 头 / 特征页面做匹配。
+
+- id: http-nginx
+  protocol: HTTP
+  product: nginx
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - '(?im)^Server:\s*nginx(\b|/)'
+      - "(?i)<hr><center>nginx</center>"
+      - "(?i)<center>nginx</center>"
+      - "(?i)Welcome to nginx!"
+  version:
+    - '(?i)nginx/([0-9][0-9A-Za-z.\-]*)'
+  os_hint:
+    - regex: '(?i)\((Ubuntu|Debian|CentOS|Alpine|Red Hat)\)'
+      value: $1
+
+- id: http-openresty
+  protocol: HTTP
+  product: OpenResty
+  priority: 110
+  confidence: 0.92
+  match:
+    any:
+      - "(?i)openresty"
+  version:
+    - '(?i)openresty/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-tengine
+  protocol: HTTP
+  product: Tengine
+  priority: 110
+  confidence: 0.9
+  match:
+    any:
+      - '(?i)Server:\s*Tengine'
+  version:
+    - '(?i)Tengine/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-apache
+  protocol: HTTP
+  product: Apache
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - '(?im)^Server:\s*Apache(\b|/)'
+      - '(?im)^Server:\s*Apache-Coyote'
+      - '(?i)Apache/2\.[0-9]'
+  version:
+    - '(?i)Apache/([0-9][0-9A-Za-z.\-]*)'
+  os_hint:
+    - regex: '(?i)\((Ubuntu|Debian|CentOS|Amazon|Red Hat|Win32|Win64|FreeBSD|Unix)\)'
+      value: $1
+
+- id: http-tomcat
+  protocol: HTTP
+  product: Apache Tomcat
+  priority: 105
+  confidence: 0.88
+  match:
+    any:
+      - "(?i)Apache-Coyote/[0-9]"
+      - "(?i)Apache Tomcat/[0-9]"
+      - "(?i)<title>Apache Tomcat"
+  version:
+    - '(?i)Apache Tomcat/([0-9][0-9A-Za-z.\-]*)'
+    - "(?i)Apache-Coyote/([0-9][0-9.]*)"
+
+- id: http-jetty
+  protocol: HTTP
+  product: Jetty
+  priority: 100
+  confidence: 0.85
+  match:
+    any:
+      - '(?i)Server:\s*Jetty'
+      - '(?i)\bjetty[/(]'
+  version:
+    - '(?i)Jetty\(([0-9][0-9A-Za-z.\-]*)\)'
+    - '(?i)Jetty/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-iis
+  protocol: HTTP
+  product: Microsoft IIS
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - '(?i)Server:\s*Microsoft-IIS'
+  version:
+    - "(?i)Microsoft-IIS/([0-9][0-9.]*)"
+  os_hint:
+    - regex: "(?i)Microsoft-IIS"
+      value: Windows
+
+- id: http-lighttpd
+  protocol: HTTP
+  product: lighttpd
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - '(?i)Server:\s*lighttpd'
+  version:
+    - '(?i)lighttpd/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-caddy
+  protocol: HTTP
+  product: Caddy
+  priority: 100
+  confidence: 0.85
+  match:
+    any:
+      - '(?i)Server:\s*Caddy'
+  version:
+    - '(?i)Caddy/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-gunicorn
+  protocol: HTTP
+  product: gunicorn
+  priority: 100
+  confidence: 0.9
+  match:
+    any:
+      - '(?i)Server:\s*gunicorn'
+  version:
+    - '(?i)gunicorn/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-werkzeug
+  protocol: HTTP
+  product: Werkzeug
+  priority: 100
+  confidence: 0.85
+  match:
+    any:
+      - '(?i)Server:\s*Werkzeug'
+  version:
+    - '(?i)Werkzeug/([0-9][0-9A-Za-z.\-]*)'
+
+- id: http-generic
+  protocol: HTTP
+  product: ""
+  priority: 10
+  confidence: 0.6
+  match:
+    any:
+      - '(?m)^HTTP/1\.[01] [1-5][0-9][0-9]'
+      - "(?m)^HTTP/2 [1-5][0-9][0-9]"
+      - '(?im)^Server:\s*\S'
+      - '(?im)^(Date|Content-Type|Content-Length|X-Powered-By):\s'

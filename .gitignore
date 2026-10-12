@@ -1,0 +1,13 @@
+# 构建产物
+bin/
+*.exe
+
+# 本地环境变量
+.env
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.history/
+.DS_Store
+Thumbs.db
