@@ -368,9 +368,8 @@ client:
 | `tmpfs: /tmp`                          | 只读根下仍提供一个内存态可写目录           |
 | `cap_drop: [ALL]`                      | 丢弃全部 Linux capabilities                |
 | `security_opt: no-new-privileges:true` | 禁止 setuid 等提权路径                     |
-| `pids_limit: 256`                      | 限制进程数，抑制 fork 炸弹                 |
 | `init: true`                           | 由 tini 回收僵尸进程                       |
-| `deploy.resources.limits`              | CPU / 内存上限，防止单容器拖垮主机         |
+| `deploy.resources.limits.{cpus,memory,pids}` | CPU / 内存 / 进程数上限，防止单容器拖垮主机、抑制 fork 炸弹 |
 
 ### 识别规则与程序代码解耦
 
